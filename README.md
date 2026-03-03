@@ -6,7 +6,7 @@ An immersive, modern take on the classic Snake game featuring a vibrant neon aes
 Neon Snaky is a modern, visually striking interpretation of the classic arcade game. Built from scratch using Vanilla JavaScript and HTML5 Canvas, this version enhances the core gameplay with a mesmerizing neon aesthetic, a challenging level-based progression system, unique food mechanics, and fully responsive controls designed for both desktop and mobile web browsers.
 
 **🎮 [LIVE DEMO LINK]**
-*snakebyad.vercel.app*
+*https://share.google/NMrmrkoYPM7KX7DzC*
 
 ---
 
