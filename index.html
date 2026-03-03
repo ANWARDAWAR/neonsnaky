@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Snake - By AID </title>
+    <!-- Social preview meta tags: replace og:url and og:image with your hosted page and image -->
+    <meta name="description" content="Play Neon Snaky — an infinite neon-styled snake game with levels, particles, and responsive mobile controls. Try to beat the high score!">
+    <meta property="og:title" content="Neon Snaky — Play the Neon Snake Game">
+    <meta property="og:description" content="Fast-paced neon snake with levels, power-ups, and responsive controls. Play now for high-score glory!">
+    <meta property="og:type" content="game">
+    <meta property="og:url" content="https://example.com/path/to/snake_geminv2.html">
+    <meta property="og:image" content="https://example.com/neon-snake-preview.png">
+    <meta property="og:image:alt" content="Neon Snake gameplay preview">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Neon Snaky — Play the Neon Snake Game">
+    <meta name="twitter:description" content="Fast-paced neon snake with levels, power-ups, and responsive controls. Play now!">
+    <meta name="twitter:image" content="https://example.com/neon-snake-preview.png">
+    <!-- Favicon links: SVG preferred, PNG fallback (replace PNG with a real hosted image if available) -->
+    <link rel="icon" type="image/svg+xml" href="/snake_icon.svg">
+    <link rel="icon" type="image/png" href="/snake_icon.png">
+    <link rel="apple-touch-icon" href="/snake_icon.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles & Overrides */
+        body {
+            background-color: #0f172a;
+            touch-action: none; /* Prevent scrolling on mobile during swipe */
+            user-select: none;
+            overflow: hidden;
+        }
+        
+        /* Neon text effects */
+        .text-neon {
+            color: #39ff14;
+            /* reduced glow for a more professional look */
+            text-shadow: 0 0 3px #39ff14, 0 0 6px #39ff14, 0 0 12px #39ff14;
+        }
+        .text-neon-red {
+            color: #ff073a;
+            text-shadow: 0 0 3px #ff073a, 0 0 6px #ff073a, 0 0 12px #ff073a;
+        }
+        .text-neon-gold {
+            color: #ffd700;
+            text-shadow: 0 0 3px #ffd700, 0 0 6px #ffd700, 0 0 12px #ffd700;
+        }
+
+        /* Brand heading font and tighter glow */
+        .brand-font {
+            font-family: 'Orbitron', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Glassmorphism panels */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        /* Responsive Canvas constraints */
+        #gameCanvas {
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.15);
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            border: 2px solid rgba(57, 255, 20, 0.2);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 55vh; /* Nayi line: Buttons ke liye neeche jagah chorne ke liye */
+            aspect-ratio: 1 / 1;
+            display: block;
+            margin: 0 auto;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+
+        /* Level Button active state */
+        .lvl-btn-active {
+            background: rgba(57, 255, 20, 0.3) !important;
+            border-color: rgba(57, 255, 20, 0.8) !important;
+            color: #fff !important;
+            box-shadow: 0 0 15px rgba(57, 255, 20, 0.5);
+        }
+
+        /* D-Pad press animation */
+        .dpad-pressed {
+            transform: scale(0.9) translateY(2px) !important;
+            transition: transform 80ms ease;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-start pt-4 md:justify-center bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white font-sans relative">
+
+    <header class="w-full max-w-[600px] flex justify-between items-center px-4 py-3 mb-2 glass-panel rounded-xl z-10 relative">
+        <div class="flex flex-col w-1/3">
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Score</span>
+            <span id="scoreDisplay" class="text-2xl font-black text-white">0</span>
+        </div>
+        <div class="flex flex-col items-center w-1/3">
+            <span id="levelDisplay" class="text-[10px] text-neon uppercase tracking-wider font-bold">Lvl 1</span>
+            <span class="text-[10px] text-gray-400 mt-1">SPACE to Pause</span>
+        </div>
+        <div class="flex items-center justify-end gap-2 flex-col md:flex-row text-right w-1/3">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Best (Lvl <span id="bestLevelIndicator">1</span>)</span>
+                <span id="highScoreDisplay" class="text-2xl font-black text-green-400">0</span>
+            </div>
+            <!-- mute button removed -->
+        </div>
+    </header>
+
+    <main class="relative w-full max-w-[600px] px-2 md:px-0">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+        <div id="mobileDPad" class="relative mt-4 flex flex-col items-center gap-2 z-10 md:hidden w-full">
+            <button id="btnUp" class="w-14 h-14 rounded-xl glass-panel border border-green-500/50 text-neon text-2xl shadow-[0_0_10px_rgba(57,255,20,0.2)] active:shadow-[0_0_20px_rgba(57,255,20,0.8)] active:bg-green-500/30 active:scale-90 flex justify-center items-center transition-all">&#9650;</button>
+            
+            <div class="flex gap-2">
+                <button id="btnLeft" class="w-14 h-14 rounded-xl glass-panel border border-green-500/50 text-neon text-2xl shadow-[0_0_10px_rgba(57,255,20,0.2)] active:shadow-[0_0_20px_rgba(57,255,20,0.8)] active:bg-green-500/30 active:scale-90 flex justify-center items-center transition-all">&#9664;</button>
+                
+                <button id="btnCenter" class="w-14 h-14 rounded-full glass-panel border border-yellow-500/60 text-neon-gold text-xl font-black shadow-[0_0_15px_rgba(255,215,0,0.3)] active:shadow-[0_0_25px_rgba(255,215,0,0.9)] active:bg-yellow-500/30 active:scale-90 flex justify-center items-center transition-all">&#10074;&#10074;</button>
+                
+                <button id="btnRight" class="w-14 h-14 rounded-xl glass-panel border border-green-500/50 text-neon text-2xl shadow-[0_0_10px_rgba(57,255,20,0.2)] active:shadow-[0_0_20px_rgba(57,255,20,0.8)] active:bg-green-500/30 active:scale-90 flex justify-center items-center transition-all">&#9654;</button>
+            </div>
+
+            <button id="btnDown" class="w-14 h-14 rounded-xl glass-panel border border-green-500/50 text-neon text-2xl shadow-[0_0_10px_rgba(57,255,20,0.2)] active:shadow-[0_0_20px_rgba(57,255,20,0.8)] active:bg-green-500/30 active:scale-90 flex justify-center items-center transition-all">&#9660;</button>
+        </div>
+
+        <div id="uiOverlay" class="absolute inset-0 z-20 flex items-center justify-center p-4">
+            
+            <div id="mainMenu" class="glass-panel p-8 rounded-2xl flex flex-col items-center w-full max-w-sm transition-opacity duration-300 text-center hidden">
+                <h2 class="text-4xl font-black mb-2 text-neon brand-font">NEON SNAKY</h2>
+                <p class="text-xs text-gray-300 mb-8">By: Anwar Dawar </p>
+                
+                <div class="flex flex-col gap-4 w-full">
+                    <button id="btnStartGame" class="w-full py-4 rounded-lg font-black tracking-widest bg-green-500/20 hover:bg-green-500/40 active:scale-95 border border-green-500/50 text-green-300 transition-all text-xl">START GAME</button>
+                    <button id="btnGoLevels" class="w-full py-3 rounded-lg font-bold bg-blue-500/20 hover:bg-blue-500/40 active:scale-95 border border-blue-500/50 text-blue-300 transition-all">SELECT DIFFICULTY</button>
+                    <button id="btnGoHighScores" class="w-full py-3 rounded-lg font-bold bg-purple-500/20 hover:bg-purple-500/40 active:scale-95 border border-purple-500/50 text-purple-300 transition-all">HIGH SCORES</button>
+                    <button id="btnGoOptions" class="w-full py-3 rounded-lg font-bold bg-orange-500/20 hover:bg-orange-500/40 active:scale-95 border border-orange-500/50 text-orange-300 transition-all">OPTIONS & CUSTOMIZE</button>
+                </div>
+            </div>
+
+            <div id="levelMenu" class="glass-panel p-8 rounded-2xl flex flex-col items-center w-full max-w-sm transition-opacity duration-300 text-center hidden">
+                <h2 class="text-2xl font-black mb-1 text-white">SELECT LEVEL</h2>
+                <p class="text-xs text-gray-400 mb-6">Higher level = Faster speed & Higher multiplier</p>
+                
+                <div class="grid grid-cols-4 gap-3 w-full mb-6">
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="1">1</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="2">2</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="3">3</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="4">4</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="5">5</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="6">6</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="7">7</button>
+                    <button class="lvl-btn py-3 rounded-lg font-bold bg-gray-700/50 border border-gray-600 transition-all" data-level="8">8</button>
+                </div>
+                <button class="btnBackMainMenu w-full py-3 rounded-lg font-bold bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 transition-all">BACK TO MENU</button>
+            </div>
+
+            <div id="highScoreMenu" class="glass-panel p-8 rounded-2xl flex flex-col items-center w-full max-w-sm transition-opacity duration-300 text-center hidden">
+                <h2 class="text-2xl font-black mb-6 text-neon-gold">HIGH SCORES</h2>
+                
+                <div id="scoresList" class="w-full flex flex-col gap-2 mb-6 max-h-48 overflow-y-auto pr-2 text-sm">
+                    </div>
+
+                <button class="btnBackMainMenu w-full py-3 rounded-lg font-bold bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 transition-all">BACK TO MENU</button>
+            </div>
+
+            <div id="optionsMenu" class="glass-panel p-8 rounded-2xl flex flex-col items-center w-full max-w-sm transition-opacity duration-300 text-center hidden">
+                <h2 class="text-3xl font-black mb-6 text-neon-gold">CUSTOMIZE CONTROLS</h2>
+                
+                <div class="w-full mb-4 text-left">
+                    <label class="text-xs text-gray-300 uppercase tracking-wider font-bold">Button Size: <span id="sizeValDisplay">56</span>px</label>
+                    <input type="range" id="sliderBtnSize" min="40" max="90" value="56" class="w-full mt-2 accent-orange-500">
+                </div>
+
+                <div class="w-full mb-8 text-left">
+                    <label class="text-xs text-gray-300 uppercase tracking-wider font-bold">Button Spacing: <span id="gapValDisplay">8</span>px</label>
+                    <input type="range" id="sliderBtnGap" min="0" max="40" value="8" class="w-full mt-2 accent-orange-500">
+                </div>
+
+                <button class="btnBackMainMenu w-full py-3 rounded-lg font-bold bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 transition-all">BACK TO MENU</button>
+            </div>
+
+            <div id="gameOverMenu" class="glass-panel p-8 rounded-2xl flex flex-col items-center w-full max-w-sm transition-opacity duration-300 text-center hidden">
+                <h2 class="text-4xl font-black mb-2 text-neon-red">GAME OVER</h2>
+                <p class="text-gray-300 mb-6">Final Score: <span id="finalScore" class="font-bold text-white text-xl">0</span></p>
+                <div class="flex flex-col gap-3 w-full">
+                    <button id="restartBtn" class="w-full py-3 rounded-lg font-bold bg-green-500/20 hover:bg-green-500/40 border border-green-500/50 text-green-300 transition-all">PLAY AGAIN</button>
+                    <button class="btnBackMainMenu w-full py-3 rounded-lg font-bold bg-gray-500/20 hover:bg-gray-500/40 border border-gray-500/50 text-gray-300 transition-all">MAIN MENU</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="pauseOverlay" class="absolute inset-0 z-30 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+            <div class="glass-panel p-8 rounded-2xl flex flex-col items-center w-full max-w-xs text-center">
+                <h2 class="text-4xl font-black mb-6 tracking-widest text-white">PAUSED</h2>
+                <button id="btnResume" class="w-full py-3 mb-3 rounded-lg font-bold bg-green-500/20 hover:bg-green-500/40 border border-green-500/50 text-green-300 transition-all">RESUME</button>
+                <button id="btnQuitToMenu" class="w-full py-3 rounded-lg font-bold bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 transition-all">MAIN MENU</button>
+            </div>
+        </div>
+
+    </main>
+
+    <div class="fixed bottom-2 w-full text-center z-50 pointer-events-none">
+        <span class="text-[11px] uppercase tracking-[0.2em] font-black text-white">
+           @github: Anwar Dawar
+        </span>
+    </div>
+
+    <script>
+        /**
+         * Snake Game Engine V2 - Encapsulated OOP
+         */
+        (() => {
+            // --- CONSTANTS ---
+            const GRID_SIZE = 20;
+            const CANVAS_SIZE = 600; 
+            const TILE_SIZE = CANVAS_SIZE / GRID_SIZE;
+            const BASE_FOOD_SCORE = 1; // Updated from 10 to 1
+            
+            // Map Level 1-8 to TickRates (ms per frame)
+            const LEVEL_SPEEDS = {
+                1: 185, 2: 165, 3: 145, 4: 125, 
+                5: 105,  6: 85,  7: 75,  8: 65
+            };
+
+            // --- AUDIO SYSTEM ---
+            class AudioManager {
+                constructor() { 
+                    this.ctx = null; 
+                    this.isMuted = false;
+                }
+                init() {
+                    if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                }
+                toggleMute() {
+                    this.isMuted = !this.isMuted;
+                    return this.isMuted;
+                }
+                playTone(freq, type, duration, volLevel = 0.1) {
+                    if (!this.ctx || this.isMuted) return; // Mute check
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(volLevel, this.ctx.currentTime + 0.01);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                }
+                playEat() {
+                    this.playTone(800, 'sine', 0.1, 0.15);
+                    setTimeout(() => this.playTone(1200, 'sine', 0.15, 0.15), 50);
+                }
+                playSpecialEat() {
+                    this.playTone(400, 'square', 0.1, 0.2);
+                    setTimeout(() => this.playTone(600, 'square', 0.1, 0.2), 100);
+                    setTimeout(() => this.playTone(800, 'square', 0.2, 0.2), 200);
+                    setTimeout(() => this.playTone(1200, 'square', 0.3, 0.2), 300);
+                }
+                playGameOver() {
+                    this.playTone(300, 'sawtooth', 0.5, 0.3);
+                    setTimeout(() => this.playTone(250, 'sawtooth', 0.5, 0.3), 150);
+                    setTimeout(() => this.playTone(200, 'sawtooth', 0.8, 0.3), 300);
+                }
+            }
+
+            // --- PARTICLE SYSTEM ---
+            class ParticleSystem {
+                constructor() { this.particles = []; }
+                spawn(x, y, color, amount = 15) {
+                    for (let i = 0; i < amount; i++) {
+                        this.particles.push({
+                            x: x * TILE_SIZE + TILE_SIZE / 2, y: y * TILE_SIZE + TILE_SIZE / 2,
+                            vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+                            life: 1.0, decay: Math.random() * 0.05 + 0.02,
+                            color: color, size: Math.random() * 4 + 2
+                        });
+                    }
+                }
+                update() {
+                    for (let i = this.particles.length - 1; i >= 0; i--) {
+                        let p = this.particles[i];
+                        p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+                        if (p.life <= 0) this.particles.splice(i, 1);
+                    }
+                }
+                draw(ctx) {
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'lighter';
+                    this.particles.forEach(p => {
+                        ctx.globalAlpha = Math.max(0, p.life);
+                        ctx.fillStyle = p.color;
+                        ctx.shadowBlur = 10; ctx.shadowColor = p.color;
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                    });
+                    ctx.restore();
+                }
+            }
+
+            // --- MAIN GAME ENGINE ---
+            class Game {
+                constructor() {
+                    // Canvas Setup
+                    this.canvas = document.getElementById('gameCanvas');
+                    this.ctx = this.canvas.getContext('2d');
+                    
+                    // UI Elements
+                    this.scoreEl = document.getElementById('scoreDisplay');
+                    this.highScoreEl = document.getElementById('highScoreDisplay');
+                    this.levelDisplay = document.getElementById('levelDisplay');
+                    this.bestLevelIndicator = document.getElementById('bestLevelIndicator');
+                    this.finalScoreEl = document.getElementById('finalScore');
+                    
+                    // Menus
+                    this.uiOverlay = document.getElementById('uiOverlay');
+                    this.mainMenu = document.getElementById('mainMenu');
+                    this.levelMenu = document.getElementById('levelMenu');
+                    this.highScoreMenu = document.getElementById('highScoreMenu');
+                    this.gameOverMenu = document.getElementById('gameOverMenu');
+                    this.pauseOverlay = document.getElementById('pauseOverlay');
+                    // Naye Options Menu Elements
+                    this.optionsMenu = document.getElementById('optionsMenu');
+                    this.sliderBtnSize = document.getElementById('sliderBtnSize');
+                    this.sliderBtnGap = document.getElementById('sliderBtnGap');
+                    
+                    // Saved Layout Settings (Default: Size 56px, Gap 8px)
+                    this.dpadSize = parseInt(localStorage.getItem('neonSnakeDPadSize')) || 56;
+                    this.dpadGap = parseInt(localStorage.getItem('neonSnakeDPadGap')) || 8;
+                    
+                    // Sliders ko saved value par set karein
+                    if(this.sliderBtnSize) this.sliderBtnSize.value = this.dpadSize;
+                    if(this.sliderBtnGap) this.sliderBtnGap.value = this.dpadGap;
+                    
+                    // Data & State
+                    this.state = 'MENU'; 
+                    this.currentLevel = parseInt(localStorage.getItem('neonSnakeSavedLevel')) || 1;
+                    this.highScores = JSON.parse(localStorage.getItem('neonSnakeHighScoresData')) || {};
+                    // Init scores 1-8 if empty
+                    for(let i=1; i<=8; i++) if(this.highScores[i] === undefined) this.highScores[i] = 0;
+                    
+                    this.score = 0;
+                    this.updateHeaderUI();
+                    
+                    // Mechanics
+                    this.snake = [];
+                    this.dir = { x: 1, y: 0 };
+                    this.nextDirQueue = [];
+                    this.food = { x: 0, y: 0 };
+                    
+                    // Special Food Mechanics
+                    this.normalFoodsEaten = 0;
+                    this.largeFood = { active: false, x: 0, y: 0, spawnTime: 0, lifetime: 5000 }; // 5 seconds
+                    
+                    this.lastTick = 0;
+                    this.animationId = null;
+                    
+                    // Systems
+                    this.audio = new AudioManager();
+                    this.particles = new ParticleSystem();
+                    // Wake Lock handle (Screen Wake Lock API)
+                    this.wakeLock = null;
+
+                    // Input Management
+                    this.touchStartX = 0; this.touchStartY = 0;
+
+                    this.bindEvents();
+                    // Apply saved D-Pad layout immediately
+                    this.applyDPadLayout();
+                    this.switchMenu(this.mainMenu);
+                    this.drawStaticBackground();
+                }
+
+                // --- DATA & UI UPDATES ---
+                updateHeaderUI() {
+                    this.levelDisplay.innerText = `Lvl ${this.currentLevel}`;
+                    this.bestLevelIndicator.innerText = this.currentLevel;
+                    this.highScoreEl.innerText = this.highScores[this.currentLevel] || 0;
+                    this.scoreEl.innerText = this.score;
+                }
+
+                // --- D-PAD CUSTOMIZATION LOGIC ---
+                applyDPadLayout() {
+                    const pad = document.getElementById('mobileDPad');
+                    if (!pad) return;
+                    
+                    const buttons = pad.querySelectorAll('button');
+                    const middleRow = pad.querySelector('div.flex'); // Beech wali row (Left, Pause, Right)
+                    
+                    // Apply Gap (Spacing)
+                    pad.style.gap = `${this.dpadGap}px`;
+                    if (middleRow) middleRow.style.gap = `${this.dpadGap}px`;
+                    
+                    // Apply Size to all buttons
+                    buttons.forEach(btn => {
+                        // Inline styles will override Tailwind classes
+                        btn.style.width = `${this.dpadSize}px`;
+                        btn.style.height = `${this.dpadSize}px`;
+                        btn.style.fontSize = `${this.dpadSize * 0.4}px`; // Font size bhi proportionally adjust hoga
+                    });
+                    
+                    // Update Text Display in Menu
+                    const sizeDisplay = document.getElementById('sizeValDisplay');
+                    const gapDisplay = document.getElementById('gapValDisplay');
+                    if(sizeDisplay) sizeDisplay.innerText = this.dpadSize;
+                    if(gapDisplay) gapDisplay.innerText = this.dpadGap;
+                }
+
+                saveHighScore() {
+                    if (this.score > this.highScores[this.currentLevel]) {
+                        this.highScores[this.currentLevel] = this.score;
+                        localStorage.setItem('neonSnakeHighScoresData', JSON.stringify(this.highScores));
+                        this.updateHeaderUI();
+                    }
+                }
+
+                // --- MENU NAVIGATION ---
+                hideAllMenus() {
+                    [this.mainMenu, this.levelMenu, this.highScoreMenu, this.gameOverMenu, this.optionsMenu].forEach(m => m.classList.add('hidden'));
+                }
+
+                switchMenu(menuElement) {
+                    this.state = 'MENU';
+                    this.hideAllMenus();
+                    this.uiOverlay.classList.remove('hidden');
+                    menuElement.classList.remove('hidden');
+                    this.drawStaticBackground();
+                }
+
+                populateHighScores() {
+                    const list = document.getElementById('scoresList');
+                    list.innerHTML = '';
+                    for(let i=1; i<=8; i++) {
+                        list.innerHTML += `<div class="flex justify-between border-b border-gray-600/50 py-1">
+                            <span class="text-gray-300">Level ${i}</span>
+                            <span class="font-bold text-neon">${this.highScores[i]}</span>
+                        </div>`;
+                    }
+                }
+
+                bindEvents() {
+                    // Main Menu Buttons
+                    document.getElementById('btnStartGame').addEventListener('click', () => this.start());
+                    document.getElementById('btnGoLevels').addEventListener('click', () => {
+                        this.updateLevelButtonsUI();
+                        this.switchMenu(this.levelMenu);
+                    });
+                    document.getElementById('btnGoHighScores').addEventListener('click', () => {
+                        this.populateHighScores();
+                        this.switchMenu(this.highScoreMenu);
+                    });
+                    // Options Menu Button
+                    const btnOpts = document.getElementById('btnGoOptions');
+                    if (btnOpts) btnOpts.addEventListener('click', () => this.switchMenu(this.optionsMenu));
+
+                    // Back Buttons
+                    document.querySelectorAll('.btnBackMainMenu').forEach(btn => {
+                        btn.addEventListener('click', () => this.switchMenu(this.mainMenu));
+                    });
+
+                    // Level Selection
+                    document.querySelectorAll('.lvl-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            this.currentLevel = parseInt(e.target.dataset.level);
+                            localStorage.setItem('neonSnakeSavedLevel', this.currentLevel);
+                            this.updateHeaderUI();
+                            this.updateLevelButtonsUI();
+                        });
+                    });
+
+                    // Pause Menu Buttons
+                    document.getElementById('btnResume').addEventListener('click', () => this.togglePause());
+                    document.getElementById('btnQuitToMenu').addEventListener('click', () => {
+                        this.state = 'MENU';
+                        this.pauseOverlay.classList.add('hidden');
+                        this.switchMenu(this.mainMenu);
+                    });
+
+                    // Restart
+                    document.getElementById('restartBtn').addEventListener('click', () => this.start());
+
+                    // Controls
+                    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
+                    
+                    this.canvas.addEventListener('touchstart', (e) => {
+                        this.touchStartX = e.changedTouches[0].screenX;
+                        this.touchStartY = e.changedTouches[0].screenY;
+                    }, {passive: false});
+
+                    this.canvas.addEventListener('touchend', (e) => {
+                        let touchEndX = e.changedTouches[0].screenX;
+                        let touchEndY = e.changedTouches[0].screenY;
+                        this.handleSwipe(this.touchStartX, this.touchStartY, touchEndX, touchEndY);
+                    }, {passive: false});
+
+                    this.canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
+
+                    // --- MOBILE D-PAD CONTROLS ---
+                    const triggerMove = (key) => {
+                        // Simulate keyboard event for existing logic
+                        this.handleKeyDown({ key: key, code: '', preventDefault: () => {} });
+                    };
+
+                    const bindBtn = (id, key) => {
+                        const btn = document.getElementById(id);
+                        if (!btn) return;
+                        const pressClass = 'dpad-pressed';
+                        // Use touchstart and mousedown for zero-delay instant response
+                        const startHandler = (e) => { e.preventDefault(); btn.classList.add(pressClass); triggerMove(key); };
+                        const endHandler = (e) => { e.preventDefault(); btn.classList.remove(pressClass); };
+                        btn.addEventListener('touchstart', startHandler, { passive: false });
+                        btn.addEventListener('mousedown', startHandler);
+                        btn.addEventListener('touchend', endHandler);
+                        btn.addEventListener('touchcancel', endHandler);
+                        btn.addEventListener('mouseup', endHandler);
+                        btn.addEventListener('mouseleave', endHandler);
+                    };
+
+                    // Bind Arrow Keys
+                    bindBtn('btnUp', 'ArrowUp');
+                    bindBtn('btnDown', 'ArrowDown');
+                    bindBtn('btnLeft', 'ArrowLeft');
+                    bindBtn('btnRight', 'ArrowRight');
+
+                    // Bind Center Circle (Pause/Resume)
+                    const btnCenter = document.getElementById('btnCenter');
+                    if (btnCenter) {
+                        const pressClass = 'dpad-pressed';
+                        const pauseHandler = (e) => {
+                            e.preventDefault();
+                            if (this.state === 'PLAYING' || this.state === 'PAUSED') {
+                                this.togglePause();
+                            }
+                        };
+                        const startPress = (e) => { e.preventDefault(); btnCenter.classList.add(pressClass); pauseHandler(e); };
+                        const endPress = (e) => { e.preventDefault(); btnCenter.classList.remove(pressClass); };
+                        btnCenter.addEventListener('touchstart', startPress, { passive: false });
+                        btnCenter.addEventListener('mousedown', startPress);
+                        btnCenter.addEventListener('touchend', endPress);
+                        btnCenter.addEventListener('touchcancel', endPress);
+                        btnCenter.addEventListener('mouseup', endPress);
+                        btnCenter.addEventListener('mouseleave', endPress);
+                    }
+
+                    // Sliders Real-Time Update (if present)
+                    if (this.sliderBtnSize && this.sliderBtnGap) {
+                        this.sliderBtnSize.addEventListener('input', (e) => {
+                            this.dpadSize = parseInt(e.target.value);
+                            localStorage.setItem('neonSnakeDPadSize', this.dpadSize);
+                            this.applyDPadLayout();
+                        });
+
+                        this.sliderBtnGap.addEventListener('input', (e) => {
+                            this.dpadGap = parseInt(e.target.value);
+                            localStorage.setItem('neonSnakeDPadGap', this.dpadGap);
+                            this.applyDPadLayout();
+                        });
+                    }
+
+                    // Wake Lock: re-acquire on visibility change when playing
+                    document.addEventListener('visibilitychange', async () => {
+                        try {
+                            if (document.visibilityState === 'visible' && this.state === 'PLAYING') {
+                                await this.requestWakeLock();
+                            } else {
+                                await this.releaseWakeLock();
+                            }
+                        } catch (err) {
+                            console.warn('Wake Lock visibility handler error', err);
+                        }
+                    });
+                }
+
+                updateLevelButtonsUI() {
+                    document.querySelectorAll('.lvl-btn').forEach(btn => {
+                        if(parseInt(btn.dataset.level) === this.currentLevel) {
+                            btn.classList.add('lvl-btn-active');
+                        } else {
+                            btn.classList.remove('lvl-btn-active');
+                        }
+                    });
+                }
+
+                // --- WAKE LOCK HELPERS ---
+                async requestWakeLock() {
+                    if (!('wakeLock' in navigator)) return; // not supported
+                    try {
+                        // If we already have a lock, do nothing
+                        if (this.wakeLock) return;
+                        this.wakeLock = await navigator.wakeLock.request('screen');
+                        this.wakeLock.addEventListener('release', () => {
+                            // clear local reference when released by UA
+                            this.wakeLock = null;
+                            console.log('Wake Lock was released');
+                        });
+                        console.log('Wake Lock acquired');
+                    } catch (err) {
+                        console.warn('Could not acquire Wake Lock:', err);
+                    }
+                }
+
+                async releaseWakeLock() {
+                    try {
+                        if (this.wakeLock) {
+                            await this.wakeLock.release();
+                            this.wakeLock = null;
+                            console.log('Wake Lock released manually');
+                        }
+                    } catch (err) {
+                        console.warn('Error releasing Wake Lock:', err);
+                        this.wakeLock = null;
+                    }
+                }
+
+                // --- GAME LOOP & LOGIC ---
+                start() {
+                    this.hideAllMenus();
+                    this.uiOverlay.classList.add('hidden');
+                    this.pauseOverlay.classList.add('hidden');
+                    
+                    this.audio.init();
+                    this.state = 'PLAYING';
+                    this.score = 0;
+                    this.normalFoodsEaten = 0;
+                    this.largeFood.active = false;
+                    this.updateHeaderUI();
+                    
+                    const startX = Math.floor(GRID_SIZE / 2);
+                    const startY = Math.floor(GRID_SIZE / 2);
+                    this.snake = [
+                        {x: startX, y: startY},
+                        {x: startX - 1, y: startY},
+                        {x: startX - 2, y: startY}
+                    ];
+                    this.dir = {x: 1, y: 0};
+                    this.nextDirQueue = [];
+                    
+                    this.spawnFood();
+                    this.particles.particles = []; 
+                    
+                    if (this.animationId) cancelAnimationFrame(this.animationId);
+                    this.lastTick = performance.now();
+                    this.animationId = requestAnimationFrame((t) => this.loop(t));
+                    // Try to acquire Wake Lock for mobile to keep screen awake during long matches
+                    this.requestWakeLock();
+                }
+
+                getOccupiedPositions() {
+                    const occupied = [...this.snake];
+                    if (this.state === 'PLAYING') {
+                        occupied.push(this.food);
+                        if(this.largeFood.active) occupied.push({x: this.largeFood.x, y: this.largeFood.y});
+                    }
+                    return occupied;
+                }
+
+                spawnFood() {
+                    let valid = false;
+                    const occupied = this.getOccupiedPositions();
+                    while (!valid) {
+                        this.food = { x: Math.floor(Math.random() * GRID_SIZE), y: Math.floor(Math.random() * GRID_SIZE) };
+                        valid = !occupied.some(pos => pos.x === this.food.x && pos.y === this.food.y);
+                    }
+                }
+
+                spawnLargeFood() {
+                    let valid = false;
+                    const occupied = this.getOccupiedPositions();
+                    while (!valid) {
+                        this.largeFood.x = Math.floor(Math.random() * GRID_SIZE);
+                        this.largeFood.y = Math.floor(Math.random() * GRID_SIZE);
+                        valid = !occupied.some(pos => pos.x === this.largeFood.x && pos.y === this.largeFood.y);
+                    }
+                    // Dynamic Timing Calculation: 100 ticks x Current Speed
+                    // Level 8 (60ms) = 6000ms (6 sec)
+                    // Level 1 (180ms) = 18000ms (18 sec)
+                    this.largeFood.lifetime = LEVEL_SPEEDS[this.currentLevel] * 100; 
+                    this.largeFood.active = true;
+                    this.largeFood.spawnTime = performance.now();
+                }
+
+                handleKeyDown(e) {
+                    if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Space"," "].includes(e.code)) {
+                        e.preventDefault();
+                    }
+
+                    if (e.code === 'Space') {
+                        this.togglePause();
+                        return;
+                    }
+
+                    if (this.state !== 'PLAYING') return;
+
+                    const lastDir = this.nextDirQueue.length > 0 ? this.nextDirQueue[this.nextDirQueue.length - 1] : this.dir;
+                    let newDir = null;
+
+                    switch (e.key) {
+                        case 'ArrowUp': case 'w': case 'W': if (lastDir.y !== 1) newDir = {x: 0, y: -1}; break;
+                        case 'ArrowDown': case 's': case 'S': if (lastDir.y !== -1) newDir = {x: 0, y: 1}; break;
+                        case 'ArrowLeft': case 'a': case 'A': if (lastDir.x !== 1) newDir = {x: -1, y: 0}; break;
+                        case 'ArrowRight': case 'd': case 'D': if (lastDir.x !== -1) newDir = {x: 1, y: 0}; break;
+                    }
+
+                    if (newDir && this.nextDirQueue.length < 2) {
+                        this.nextDirQueue.push(newDir);
+                    }
+                }
+
+                handleSwipe(startX, startY, endX, endY) {
+                    if (this.state !== 'PLAYING') return;
+                    const dx = endX - startX, dy = endY - startY, minDist = 30;
+                    if (Math.abs(dx) < minDist && Math.abs(dy) < minDist) return;
+
+                    const lastDir = this.nextDirQueue.length > 0 ? this.nextDirQueue[this.nextDirQueue.length - 1] : this.dir;
+                    let newDir = null;
+
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        if (dx > 0 && lastDir.x !== -1) newDir = {x: 1, y: 0};
+                        else if (dx < 0 && lastDir.x !== 1) newDir = {x: -1, y: 0};
+                    } else {
+                        if (dy > 0 && lastDir.y !== -1) newDir = {x: 0, y: 1};
+                        else if (dy < 0 && lastDir.y !== 1) newDir = {x: 0, y: -1};
+                    }
+
+                    if (newDir && this.nextDirQueue.length < 2) this.nextDirQueue.push(newDir);
+                }
+
+                togglePause() {
+                    // Only toggle if we are actually in game
+                    if (this.state === 'PLAYING') {
+                        this.state = 'PAUSED';
+                        this.pauseOverlay.classList.remove('hidden');
+                        // Release wake lock when paused
+                        this.releaseWakeLock();
+                    } else if (this.state === 'PAUSED') {
+                        this.state = 'PLAYING';
+                        this.pauseOverlay.classList.add('hidden');
+                        this.lastTick = performance.now(); 
+                        // Re-acquire wake lock when resuming
+                        this.requestWakeLock();
+                    }
+                }
+
+                gameOver() {
+                    this.state = 'GAMEOVER';
+                    this.audio.playGameOver();
+                    this.saveHighScore();
+                    this.finalScoreEl.innerText = this.score;
+                    this.uiOverlay.classList.remove('hidden');
+                    this.gameOverMenu.classList.remove('hidden');
+                    // Ensure wake lock is released when game ends
+                    this.releaseWakeLock();
+                }
+
+                updateLogic() {
+                    // Manage Large Food Lifetime
+                    if (this.largeFood.active) {
+                        if (performance.now() - this.largeFood.spawnTime > this.largeFood.lifetime) {
+                            this.largeFood.active = false;
+                        }
+                    }
+
+                    if (this.nextDirQueue.length > 0) this.dir = this.nextDirQueue.shift();
+
+                    let newHead = { x: this.snake[0].x + this.dir.x, y: this.snake[0].y + this.dir.y };
+
+                    // Infinite Bounds Wrap-Around Logic
+                    if (newHead.x < 0) newHead.x = GRID_SIZE - 1;
+                    else if (newHead.x >= GRID_SIZE) newHead.x = 0;
+                    
+                    if (newHead.y < 0) newHead.y = GRID_SIZE - 1;
+                    else if (newHead.y >= GRID_SIZE) newHead.y = 0;
+
+                    // Self Collision (exclude tail tip unless we eat)
+                    for (let i = 0; i < this.snake.length; i++) {
+                        let willEat = (newHead.x === this.food.x && newHead.y === this.food.y) || 
+                                      (this.largeFood.active && newHead.x === this.largeFood.x && newHead.y === this.largeFood.y);
+                        if (i === this.snake.length - 1 && !willEat) continue; 
+                        
+                        if (this.snake[i].x === newHead.x && this.snake[i].y === newHead.y) {
+                            this.gameOver();
+                            return;
+                        }
+                    }
+
+                    this.snake.unshift(newHead);
+                    let ateSomething = false;
+
+                    // Check Large Food
+                    if (this.largeFood.active && newHead.x === this.largeFood.x && newHead.y === this.largeFood.y) {
+                        const timeAlive = performance.now() - this.largeFood.spawnTime;
+                        // Calculate remaining seconds (1 to 8)
+                        const remainingSeconds = Math.max(1, Math.ceil((this.largeFood.lifetime - timeAlive) / 1000));
+                        
+                        // Formula: Level * Remaining Seconds
+                        this.score += (this.currentLevel * remainingSeconds);
+                        
+                        this.scoreEl.innerText = this.score;
+                        this.audio.playSpecialEat();
+                        this.particles.spawn(this.largeFood.x, this.largeFood.y, '#ffd700', 30);
+                        
+                        this.largeFood.active = false;
+                        ateSomething = true;
+                    }
+                    // Check Normal Food
+                    else if (newHead.x === this.food.x && newHead.y === this.food.y) {
+                        this.score += (BASE_FOOD_SCORE * this.currentLevel);
+                        this.scoreEl.innerText = this.score;
+                        this.audio.playEat();
+                        this.particles.spawn(this.food.x, this.food.y, '#ff073a');
+                        this.spawnFood();
+                        ateSomething = true;
+
+                        this.normalFoodsEaten++;
+                        if (this.normalFoodsEaten % 7 === 0) {
+                            this.spawnLargeFood();
+                        }
+                    } 
+                    
+                    if (!ateSomething) {
+                        this.snake.pop();
+                    }
+                }
+
+                // --- RENDERING ---
+                drawStaticBackground() {
+                    this.ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    for(let i = 0; i <= CANVAS_SIZE; i += TILE_SIZE) {
+                        this.ctx.moveTo(i, 0); this.ctx.lineTo(i, CANVAS_SIZE);
+                        this.ctx.moveTo(0, i); this.ctx.lineTo(CANVAS_SIZE, i);
+                    }
+                    this.ctx.stroke();
+                }
+
+                draw() {
+                    this.drawStaticBackground();
+
+                    // Render Normal Food (Neon Red)
+                    const fSize = TILE_SIZE - 4;
+                    const fx = this.food.x * TILE_SIZE + 2;
+                    const fy = this.food.y * TILE_SIZE + 2;
+                    this.ctx.shadowBlur = 15;
+                    this.ctx.shadowColor = '#ff073a';
+                    this.ctx.fillStyle = '#ff073a';
+                    this.ctx.beginPath();
+                    this.ctx.roundRect(fx, fy, fSize, fSize, 6);
+                    this.ctx.fill();
+
+                    // Render Large Food (Pulsing Gold)
+                    if (this.largeFood.active) {
+                        const timeAlive = performance.now() - this.largeFood.spawnTime;
+                        const ratio = Math.max(0, 1 - (timeAlive / this.largeFood.lifetime));
+                        
+                        // Pulse effect based on time left + blinking at end
+                        const pulse = Math.abs(Math.sin(performance.now() / 150));
+                        let blinkAlpha = 1;
+                        if(ratio < 0.3) blinkAlpha = pulse > 0.5 ? 1 : 0.2; // Blink rapidly at end
+
+                        const baseSize = TILE_SIZE;
+                        const dynamicSize = (TILE_SIZE - 4) + (4 * ratio); // Shrinks slightly as time runs out
+                        const offset = (TILE_SIZE - dynamicSize) / 2;
+                        
+                        const lx = this.largeFood.x * TILE_SIZE + offset;
+                        const ly = this.largeFood.y * TILE_SIZE + offset;
+
+                        this.ctx.globalAlpha = blinkAlpha;
+                        this.ctx.shadowBlur = 20 + (10 * pulse);
+                        this.ctx.shadowColor = '#ffd700';
+                        this.ctx.fillStyle = '#ffd700';
+                        this.ctx.beginPath();
+                        this.ctx.roundRect(lx, ly, dynamicSize, dynamicSize, 8);
+                        this.ctx.fill();
+                        
+                        // Inner white core
+                        this.ctx.shadowBlur = 0;
+                        this.ctx.fillStyle = '#ffffff';
+                        this.ctx.beginPath();
+                        this.ctx.roundRect(lx + 4, ly + 4, dynamicSize - 8, dynamicSize - 8, 4);
+                        this.ctx.fill();
+                        this.ctx.globalAlpha = 1.0; // reset
+                    }
+
+                    // Render Snake (Real Look - Lightweight)
+                    this.snake.forEach((segment, index) => {
+                        const half = TILE_SIZE / 2;
+                        const cx = segment.x * TILE_SIZE + half;
+                        const cy = segment.y * TILE_SIZE + half;
+
+                        const isHead = index === 0;
+
+                        if (isHead) {
+                            // --- DRAW HEAD ---
+                            this.ctx.save();
+                            this.ctx.translate(cx, cy);
+                            
+                            // Direction ke hisaab se head ko rotate karein
+                            if (this.dir.x === 1) this.ctx.rotate(0); // Right
+                            else if (this.dir.x === -1) this.ctx.rotate(Math.PI); // Left
+                            else if (this.dir.y === 1) this.ctx.rotate(Math.PI / 2); // Down
+                            else if (this.dir.y === -1) this.ctx.rotate(-Math.PI / 2); // Up
+
+                            // Head ki Shape (Neon Green)
+                            this.ctx.shadowBlur = 15;
+                            this.ctx.shadowColor = '#39ff14';
+                            this.ctx.fillStyle = '#39ff14';
+                            this.ctx.beginPath();
+                            this.ctx.arc(0, 0, half - 1, 0, Math.PI * 2);
+                            this.ctx.fill();
+
+                            this.ctx.shadowBlur = 0; // Ankho aur zubaan pe glow na aye taake clear dikhe
+
+                            // Aankhein (White)
+                            this.ctx.fillStyle = '#ffffff';
+                            this.ctx.beginPath(); this.ctx.arc(half / 2, -half / 2.5, 3.5, 0, Math.PI * 2); this.ctx.fill();
+                            this.ctx.beginPath(); this.ctx.arc(half / 2, half / 2.5, 3.5, 0, Math.PI * 2); this.ctx.fill();
+
+                            // Pupils (Black dots)
+                            this.ctx.fillStyle = '#000000';
+                            this.ctx.beginPath(); this.ctx.arc(half / 2 + 1, -half / 2.5, 1.5, 0, Math.PI * 2); this.ctx.fill();
+                            this.ctx.beginPath(); this.ctx.arc(half / 2 + 1, half / 2.5, 1.5, 0, Math.PI * 2); this.ctx.fill();
+
+                            // Snake ki Zubaan (Red Forked Tongue)
+                            this.ctx.strokeStyle = '#ff073a';
+                            this.ctx.lineWidth = 1.5;
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(half, 0); // Mooh se bahar
+                            this.ctx.lineTo(half + 6, 0); // Seedhi line
+                            this.ctx.lineTo(half + 10, -3); // Upar wala hissa
+                            this.ctx.moveTo(half + 6, 0);
+                            this.ctx.lineTo(half + 10, 3); // Neeche wala hissa
+                            this.ctx.stroke();
+
+                            this.ctx.restore();
+                        } else {
+                            // --- DRAW BODY ---
+                            // Pooch (tail) ki taraf jate hue thora chota aur fade hota jaye
+                            const ratio = 1 - (index / this.snake.length);
+                            const bodyRadius = (half - 2) * (0.6 + (0.4 * ratio)); 
+                            const alpha = 0.5 + (0.5 * ratio);
+
+                            this.ctx.shadowBlur = 10;
+                            this.ctx.shadowColor = '#39ff14';
+                            this.ctx.fillStyle = `rgba(57, 255, 20, ${alpha})`;
+                            
+                            this.ctx.beginPath();
+                            this.ctx.arc(cx, cy, bodyRadius, 0, Math.PI * 2);
+                            this.ctx.fill();
+                        }
+                    });
+
+                    // Render Particles
+                    this.particles.draw(this.ctx);
+
+                    // Render Large Food Timer Bar at the bottom
+                    if (this.largeFood.active) {
+                        const timeAlive = performance.now() - this.largeFood.spawnTime;
+                        const ratio = Math.max(0, 1 - (timeAlive / this.largeFood.lifetime));
+                        
+                        this.ctx.fillStyle = '#ffd700';
+                        this.ctx.shadowBlur = 10;
+                        this.ctx.shadowColor = '#ffd700';
+                        this.ctx.beginPath();
+                        // 4px height bar at the very bottom of canvas
+                        this.ctx.rect(0, CANVAS_SIZE - 4, CANVAS_SIZE * ratio, 4);
+                        this.ctx.fill();
+                        this.ctx.shadowBlur = 0; // reset
+                    }
+
+                    this.ctx.shadowBlur = 0;
+                }
+
+                loop(timestamp) {
+                    // Update particles regardless of pause for cool trailing effects
+                    this.particles.update();
+
+                    if (this.state === 'PLAYING') {
+                        const delta = timestamp - this.lastTick;
+                        const tickRate = LEVEL_SPEEDS[this.currentLevel];
+
+                        if (delta >= tickRate) {
+                            this.updateLogic();
+                            this.lastTick = timestamp - (delta % tickRate); 
+                        }
+                        this.draw();
+                    }
+
+                    // Loop continues even if paused to draw frame/particles
+                    if(this.state === 'PLAYING' || this.state === 'PAUSED') {
+                        if(this.state === 'PAUSED') {
+                            this.draw(); // Keeps canvas statically drawn
+                        }
+                        this.animationId = requestAnimationFrame((t) => this.loop(t));
+                    }
+                }
+            }
+
+            // Init
+            document.addEventListener('DOMContentLoaded', () => {
+                new Game();
+            });
+
+        })();
+    </script>
+</body>
+</html>
