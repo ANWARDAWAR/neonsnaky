@@ -66,3 +66,11 @@ neonsnaky/
 ├── index.html        # The main application file (HTML, CSS, JavaScript)
 ├── snake_icon.svg       # The browser tab icon
 └── README.md         # Project documentation and details
+
+---
+
+## 👨‍💻 Developed By
+
+**Anwar Iqbal Dawar**
+* [GitHub Profile](https://github.com/ANWARDAWAR)
+
