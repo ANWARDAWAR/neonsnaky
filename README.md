@@ -56,6 +56,11 @@ Since this is a client-side only application, running it locally is extremely si
 3.  **Open the game:**
     Simply double-click the `index.html` file to open it in your preferred web browser. Alternatively, use an extension like "Live Server" in VS Code for a more streamlined development experience.
 
+## 👨‍💻 Developed By
+
+**Anwar Iqbal Dawar**
+* [GitHub Profile](https://github.com/ANWARDAWAR)
+
 ---
 
 ## 📂 Project Structure
@@ -69,8 +74,5 @@ neonsnaky/
 
 ---
 
-## 👨‍💻 Developed By
 
-**Anwar Iqbal Dawar**
-* [GitHub Profile](https://github.com/ANWARDAWAR)
 
